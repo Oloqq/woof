@@ -100,7 +100,7 @@ class WolfDeerModel(Model):
             self.grid.place_agent(deer, (x, y))
             self.schedule.add(deer)
 
-    def kurwa(self, N_W, N_D, _add_deer):
+    def update_params(self, N_W, N_D, _add_deer):
         print("yeee")
         self.add_deer = _add_deer
 
