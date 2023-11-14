@@ -6,7 +6,7 @@ from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
 import random
 
-GRID_SIZE = 10
+GRID_SIZE = 20
 INIT_WOLVES = 2
 INIT_DEER = 5
 WOLF_SPEED = 1
@@ -45,7 +45,19 @@ class Wolf(Animal):
             dy = 1
         elif nearest_deer_pos[1] < self.pos[1]:
             dy = -1
+
+
         self.move(dx * self.speed, dy * self.speed)
+
+        # Proposed new position
+        new_x = (self.pos[0] + dx * self.speed) % GRID_SIZE
+        new_y = (self.pos[1] + dy * self.speed) % GRID_SIZE
+        new_position = (new_x, new_y)
+
+        # Check if the new position is already occupied by another wolf
+        cell_mates = self.model.grid.get_cell_list_contents([new_position])
+        if not any(isinstance(agent, Wolf) for agent in cell_mates):
+            self.move(dx * self.speed, dy * self.speed)
 
         # Check if wolf caught any deer
         cell_mates = self.model.grid.get_cell_list_contents([self.pos])
@@ -62,7 +74,8 @@ class Deer(Animal):
 
 
 class WolfDeerModel(Model):
-    def __init__(self, N_W, N_D):
+    def __init__(self, N_W, N_D, _add_deer):
+        self.add_deer = _add_deer
         self.grid = MultiGrid(GRID_SIZE, GRID_SIZE, torus=True)
         self.schedule = RandomActivation(self)
         self.running = True
@@ -87,7 +100,16 @@ class WolfDeerModel(Model):
             self.grid.place_agent(deer, (x, y))
             self.schedule.add(deer)
 
+    def kurwa(self, N_W, N_D, _add_deer):
+        print("yeee")
+        self.add_deer = _add_deer
+
     def step(self):
+        server.reset_model_kurwa()
+        if self.add_deer:
+            self.add_deer = False
+            self.add_deer_method()
+
         self.schedule.step()
         for agent in self.to_be_removed:
             self.schedule.remove(agent)
@@ -95,12 +117,14 @@ class WolfDeerModel(Model):
         self.to_be_removed.clear()
         self.datacollector.collect(self)
 
-
-# Run the model
-# model = WolfDeerModel(INIT_WOLVES, INIT_DEER)
-# for i in range(100):  # Run for 100 steps
-#     model.step()
-
+    def add_deer_method(self):
+        for _ in range(10):  # Add 10 deer
+            deer_id = max([agent.unique_id for agent in self.schedule.agents]) + 1
+            new_deer = Deer(deer_id, self, DEER_SPEED)
+            x = random.randrange(self.grid.width)
+            y = random.randrange(self.grid.height)
+            self.grid.place_agent(new_deer, (x, y))
+            self.schedule.add(new_deer)
 
 def compute_deer_count(model):
     return len([agent for agent in model.schedule.agents if isinstance(agent, Deer)])
@@ -126,17 +150,26 @@ def agent_portrayal(agent):
     return portrayal
 
 
+
 grid = CanvasGrid(agent_portrayal, GRID_SIZE, GRID_SIZE, 500, 500)
 
-chart = ChartModule(
-    [{"Label": "Deer", "Color": "red"}], data_collector_name="datacollector"
-)
+# chart = ChartModule(
+#     [{"Label": "Deer", "Color": "red"}], data_collector_name="datacollector"
+# )
+
+from mesa.visualization.UserParam import UserSettableParameter
+
+model_params = {
+    "N_W": UserSettableParameter('slider', "Number of Wolves", INIT_WOLVES, 1, 10, 1),
+    "N_D": UserSettableParameter('slider', "Number of Deer", INIT_DEER, 1, 10, 1),
+    "_add_deer": UserSettableParameter('number', "Spawn X deer each iteration", value=0)
+}
 
 server = ModularServer(
     WolfDeerModel,
-    [grid, chart],
+    [grid],
     "Wolf-Deer Model",
-    {"N_W": INIT_WOLVES, "N_D": INIT_DEER},
+    model_params
 )
 
 server.launch(port=5000)
