@@ -93,6 +93,7 @@ class WolfDeerModel(Model):
             self.schedule.remove(agent)
             self.grid.remove_agent(agent)
         self.to_be_removed.clear()
+        self.datacollector.collect(self)
 
 
 # Run the model
@@ -127,9 +128,8 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, GRID_SIZE, GRID_SIZE, 500, 500)
 
-# Assuming you'd like to see the number of deer over time, add a chart
 chart = ChartModule(
-    [{"Label": "Deer", "Color": "green"}], data_collector_name="datacollector"
+    [{"Label": "Deer", "Color": "red"}], data_collector_name="datacollector"
 )
 
 server = ModularServer(
