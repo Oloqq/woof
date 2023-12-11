@@ -204,7 +204,7 @@ server = ModularServer(
 )
 
 def go():
-    server.launch(port=5003)
+    server.launch(port=5004)
 
 if __name__ == "__main__":
     go()
