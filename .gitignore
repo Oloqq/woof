@@ -5,3 +5,4 @@ venv/Lib/site-packages/*
 # !venv\Lib\site-packages\mesa\agent.py
 
 **.pyc
+**.egg-info

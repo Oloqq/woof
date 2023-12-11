@@ -203,4 +203,8 @@ server = ModularServer(
     model_params
 )
 
-server.launch(port=5000)
+def go():
+    server.launch(port=5002)
+
+if __name__ == "__main__":
+    go()
