@@ -1,8 +1,5 @@
-venv/*
-!venv/Lib
-venv/Lib/site-packages/*
-!venv/Lib/site-packages/mesa*
-# !venv\Lib\site-packages\mesa\agent.py
+venv
 
+**/__pycache__
 **.pyc
 **.egg-info
