@@ -23,6 +23,19 @@ class Animal(Agent):
         self.model.grid.move_agent(self, new_position)
 
 
+class Bouncer(Agent):
+    def __init__(self, unique_id, model):
+        super().__init__(unique_id, model)
+        self.dx = 1
+
+    def step(self):
+        newx = (self.pos[0] + self.dx)
+        print(newx)
+        if newx >= 22 or newx <= -2:
+            self.dx *= -1
+        new_position = (newx, self.pos[1])
+        self.model.grid.move_agent(self, new_position)
+
 class Wolf(Animal):
     def step(self):
         deer_positions = [
@@ -76,11 +89,17 @@ class Deer(Animal):
 class WolfDeerModel(Model):
     def __init__(self, N_W, N_D, _add_deer):
         self.add_deer = _add_deer
-        self.grid = MultiGrid(GRID_SIZE, GRID_SIZE, torus=True)
+        self.grid = MultiGrid(22, 22, torus=True)
         self.schedule = RandomActivation(self)
         self.running = True
         self.datacollector = DataCollector(model_reporters={"Deer": compute_deer_count})
         self.to_be_removed = set()
+
+        # bounce = Bouncer(0, self)
+        # x = 10
+        # y = 10
+        # self.grid.place_agent(bounce, (x, y))
+        # self.schedule.add(bounce)
 
         # Create wolves
         for i in range(N_W):
@@ -105,7 +124,7 @@ class WolfDeerModel(Model):
         self.add_deer = _add_deer
 
     def step(self):
-        server.reset_model_kurwa()
+        server.update_params()
         if self.add_deer:
             self.add_deer = False
             self.add_deer_method()
@@ -133,18 +152,30 @@ def compute_deer_count(model):
 def agent_portrayal(agent):
     if isinstance(agent, Wolf):
         portrayal = {
+            "x": 2,
+            "y": 3,
             "Shape": "circle",
             "Filled": "true",
             "r": 0.5,
-            "Color": "red",
+            "Color": "gray",
             "Layer": 1,
         }
     elif isinstance(agent, Deer):
         portrayal = {
+            "x": 2,
+            "y": 5,
             "Shape": "circle",
             "Filled": "true",
             "r": 0.5,
-            "Color": "green",
+            "Color": "brown",
+            "Layer": 0,
+        }
+    elif isinstance(agent, Bouncer):
+        portrayal = {
+            "Shape": "circle",
+            "Filled": "true",
+            "r": 0.5,
+            "Color": "black",
             "Layer": 0,
         }
     return portrayal
